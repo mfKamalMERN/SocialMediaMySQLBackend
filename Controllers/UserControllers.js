@@ -169,3 +169,14 @@ export const getMyDetails = (req, res) => {
     })
 
 }
+
+export const UpdateCity = (req, res) => {
+    const { newcity } = req.body
+
+    const sql = `UPDATE users SET city = ? WHERE id = ?`
+
+    db.query(sql, [newcity, req.user], (err, data) => {
+        if (err) res.json(err)
+        else res.json(`City Updated`)
+    })
+}

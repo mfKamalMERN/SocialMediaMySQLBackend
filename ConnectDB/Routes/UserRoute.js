@@ -1,5 +1,5 @@
 import express from 'express'
-import { FollowUser, Login, Logout, Register, UploadProfilePic, getFollowers, getMyDetails } from '../../Controllers/UserControllers.js'
+import { FollowUser, Login, Logout, Register, UpdateCity, UploadProfilePic, getFollowers, getMyDetails } from '../../Controllers/UserControllers.js'
 import { VerifyToken } from '../../VerifyToken/VerifyToken.js'
 import { upload } from '../../Multer/multer.js'
 
@@ -22,3 +22,5 @@ userRouter.get('/getfollowers/:targetuserid', VerifyToken, getFollowers)
 userRouter.get('/myprofile', VerifyToken, getMyDetails)
 
 userRouter.put('/updateprofilepic/:userid', VerifyToken, upload.single('file'), UploadProfilePic)
+
+userRouter.put('/updatecity', VerifyToken, UpdateCity)
