@@ -54,6 +54,7 @@ export const Login = (req, res) => {
 
 export const Logout = (req, res) => res.clearCookie('token').json('User Logged Out')
 
+
 export const FollowUser = (req, res) => {
     const { usertofollow } = req.params
 
@@ -63,18 +64,18 @@ export const FollowUser = (req, res) => {
         if (err) res.json(err)
         else {
             if (data.length) {
-                const delsql = "DELETE FROM relationships WHERE followinguserid = ?"
+                const delsql = "DELETE FROM relationships WHERE followinguserid = ? AND followeruserid = ?"
 
-                db.query(delsql, [usertofollow], (er, result) => {
-                    if (er) res.json(er)
-                    else res.json({ Msg: `Unfollowed user ${data[0].name}` })
+                db.query(delsql, [usertofollow, req.user], (er, result) => {
+                    if (er) res.json({ Msg: er })
+                    else res.json({ Msg: `Unfollowed user ${data[0].name}`, Status: `Follow` })
                 })
             }
             else {
                 const addsql = "INSERT INTO relationships (`followeruserid`, `followinguserid`) VALUES (?, ?)"
                 db.query(addsql, [req.user, usertofollow], (errr, dtt) => {
                     if (errr) res.json(errr)
-                    else res.json({ Msg: `Followed user` })
+                    else res.json({ Msg: `Followed user`, Status: `Unfollow` })
                 })
             }
         }
@@ -116,6 +117,7 @@ export const getFollowers = (req, res) => {
 
 }
 
+
 export const UploadProfilePic = (req, res) => {
     const { userid } = req.params
     const file = req.file
@@ -127,10 +129,43 @@ export const UploadProfilePic = (req, res) => {
 
         db.query(sql, [`http://localhost:8700/Images/${file.filename}`, userid], (err, result) => {
             if (err) res.json(err)
-            else res.json(`DP updated`)
+            else {
+                const q = `SELECT * FROM users WHERE id = ?`
+                db.query(q, [req.user], (er, userdetails) => {
+                    if (er) res.json(er)
+                    else res.json({ Msg: `DP updated`, dt: userdetails })
+                })
+
+            }
 
         })
     }
 }
 
+export const getMyDetails = (req, res) => {
 
+    const sql = `SELECT name, ProfilePic, u.id AS UserId, r.followeruserid AS FollowedBy FROM users AS u JOIN relationships AS r ON(r.followinguserid = u.id) WHERE r.followeruserid = ?`
+
+    db.query(sql, [req.user], (err, data) => {
+        if (err) res.json(err)
+
+        else {
+            const q = `SELECT name, ProfilePic, u.id AS UserId, r.followinguserid AS FollowingTo FROM users AS u JOIN relationships AS r ON(r.followeruserid = u.id) WHERE r.followinguserid = ?`
+
+            db.query(q, [req.user], (er, data2) => {
+                if (er) res.json(er)
+                else {
+                    const q2 = `SELECT * FROM users WHERE id = ?`
+                    db.query(q2, [req.user], (errr, data3) => {
+                        if (errr) res.json(errr)
+
+                        else res.json({ LoggedUser: data3, Followings: data, Followers: data2, Token: req.cookies.token })
+                    })
+
+                }
+            })
+
+        }
+    })
+
+}

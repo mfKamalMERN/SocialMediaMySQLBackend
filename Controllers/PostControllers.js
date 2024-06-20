@@ -27,7 +27,7 @@ export const LikePost = (req, res) => {
         if (err) res.json(err)
         else {
 
-            if (result.length > 0) {
+            if (result.length) {
                 const sqldelete = "DELETE FROM likes WHERE `postid` = ? AND `likedby` = ?"
 
                 db.query(sqldelete, values, (err, data) => {
@@ -56,7 +56,18 @@ export const getPosts = (req, res) => {
     db.query(sql, [req.user, req.user], (err, data) => {
         if (err) res.json(err)
         else {
-            if (data.length) res.json({ Posts: data, Token: req.cookies.token })
+            if (data.length) {
+
+                const q = "SELECT  users.id AS userId, posts.id AS postId FROM likes JOIN posts ON(likes.postid = posts.id) JOIN users ON(users.id = likes.likedby)"
+
+                db.query(q, (er, dt) => {
+                    if (er) res.json(er)
+                    else {
+                        res.json({ Posts: data, Token: req.cookies.token, Likes: dt })
+
+                    }
+                })
+            }
         }
     })
 
@@ -139,13 +150,13 @@ export const DeleteComment = (req, res) => {
 export const ViewLikes = (req, res) => {
     const { targetpostid } = req.params
 
-    const sql = "SELECT name, postid AS PostId FROM likes JOIN users ON(likes.likedby = users.id) WHERE likes.postid = ?"
+    const sql = "SELECT followinguserid, followeruserid, name, likedby AS userId, postid AS PostId, ProfilePic FROM likes JOIN users ON(likes.likedby = users.id) JOIN relationships ON(relationships.followinguserid = ?) WHERE likes.postid = ?"
 
-    db.query(sql, [targetpostid], (err, data) => {
+    db.query(sql, [req.user, targetpostid], (err, data) => {
         if (err) res.json(err)
         else {
             if (data.length) res.json(data)
-            else res.json(`No likeson this post`)
+            else res.json(`No likes on this post`)
         }
     })
 

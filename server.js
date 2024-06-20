@@ -10,7 +10,7 @@ app.use(express.json())
 app.use(express.static('Public'))
 
 app.use(cors({
-    origin: ["http://localhost:3000", "http://localhost:3000/home", "http://localhost:3000/editpost/:postid"],
+    origin: ["http://localhost:3000", "http://localhost:3000/home", "http://localhost:3000/editpost/:postid", "http://localhost:3000/viewlikes/:postid", "http://localhost:3000/myprofile"],
 
     methods: ["GET", "POST", "PUT", "DELETE"],
 
